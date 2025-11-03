@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modern Text Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #111827; /* Dark slate */
+            --bg-light: #f9fafb; /* Light gray */
+            --panel-dark: #1f2937; /* Darker slate */
+            --panel-light: #ffffff; /* White */
+            --text-primary-dark: #e5e7eb; /* Light gray text */
+            --text-primary-light: #111827; /* Dark slate text */
+            --text-muted-dark: #9ca3af; /* Muted gray */
+            --text-muted-light: #6b7280; /* Muted gray for light */
+            --primary: #4f46e5; /* Indigo */
+            --primary-hover: #4338ca; /* Darker indigo */
+            --accent: #f59e0b; /* Amber for highlights */
+            --accent-hover: #d97706; /* Darker amber */
+            --border-dark: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --transition: all 0.2s ease-in-out;
+            --gradient-accent: linear-gradient(45deg, var(--primary), var(--accent));
+        }
+
+        [data-theme="dark"] {
+            --bg: var(--bg-dark);
+            --panel: var(--panel-dark);
+            --text-primary: var(--text-primary-dark);
+            --text-muted: var(--text-muted-dark);
+            --border: var(--border-dark);
+            color-scheme: dark;
+        }
+
+        [data-theme="light"] {
+            --bg: var(--bg-light);
+            --panel: var(--panel-light);
+            --text-primary: var(--text-primary-light);
+            --text-muted: var(--text-muted-light);
+            --border: var(--border-light);
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        body {
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            color: var(--text-primary);
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 0.75rem 2rem;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            letter-spacing: -0.025em;
+        }
+
+        .controls {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .controls label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .controls input[type="checkbox"] {
+            accent-color: var(--primary);
+        }
+
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            padding: 1.5rem;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow: auto;
+        }
+
+        .files-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .files-header div {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: var(--text-primary);
+        }
+
+        .files-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn.secondary:hover {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: var(--primary-hover);
+        }
+
+        .file-search input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .file-search input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .files {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            background: var(--panel);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-item:hover {
+            background: var(--primary);
+            color: #ffffff;
+            transform: translateX(2px);
+        }
+
+        .file-item:hover .file-meta,
+        .file-item:hover strong {
+            color: #ffffff;
+        }
+
+        .file-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .editor-shell {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        @media (min-width: 1001px) {
+            .editor-shell {
+                grid-template-columns: 1fr 300px;
+            }
+        }
+
+        .editor-card {
+            background: var(--panel);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .editor-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-accent);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+        }
+
+        .toolbar .icon {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .toolbar .icon:hover {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .editor {
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-primary);
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            font-size: 1rem;
+            line-height: 1.6;
+            outline: none;
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        .editor:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .editor p {
+            margin: 0 0 1rem 0;
+        }
+
+        .statusbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--panel);
+        }
+
+        .file-actions-aside {
+            background: var(--panel);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .file-actions-aside div {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 1000px) {
+            .sidebar {
+                display: none;
+            }
+
+            .editor-shell {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Custom Scrollbar */
+        .files::-webkit-scrollbar,
+        .main::-webkit-scrollbar,
+        .editor::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .files::-webkit-scrollbar-track,
+        .main::-webkit-scrollbar-track,
+        .editor::-webkit-scrollbar-track {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+        }
+
+        .files::-webkit-scrollbar-thumb,
+        .main::-webkit-scrollbar-thumb,
+        .editor::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+        }
+
+        .files::-webkit-scrollbar-thumb:hover,
+        .main::-webkit-scrollbar-thumb:hover,
+        .editor::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+    <div class="topbar">
+        <div class="brand">Modern Text Editor</div>
+        <div class="controls">
+            <div id="autosaveStatus" style="font-size:0.875rem;color:var(--text-muted)">Autosave: off</div>
+            <label><input id="autosaveToggle" type="checkbox" /> Auto</label>
+            <label><input id="themeToggle" type="checkbox" /> Light</label>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <aside class="sidebar">
+            <div class="files-header">
+                <div>Files</div>
+                <div class="files-actions">
+                    <button id="newBtn" class="btn secondary">New</button>
+                    <button id="saveBtn" class="btn">Save</button>
+                </div>
+            </div>
+            <div class="file-search">
+                <input id="filename" type="text" placeholder="Search or enter filename (e.g., document.docx)" aria-label="filename" />
+            </div>
+            <div class="files" id="fileList" role="list"></div>
+            <div style="margin-top:auto;font-size:0.75rem;color:var(--text-muted)">
+                Files stored in <code style="background:var(--bg);padding:0.2rem 0.4rem;border-radius:var(--radius-sm)">saved_files/</code>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="editor-shell">
+                <section class="editor-card">
+                    <div class="toolbar" role="toolbar" aria-label="Formatting toolbar">
+                        <button class="icon" data-cmd="bold" title="Bold"><strong>B</strong></button>
+                        <button class="icon" data-cmd="italic" title="Italic"><em>I</em></button>
+                        <button class="icon" data-cmd="underline" title="Underline">U</button>
+                        <button class="icon" data-cmd="strikeThrough" title="Strikethrough">S</button>
+                        <div style="width:0.5rem"></div>
+                        <button class="icon" data-cmd="insertUnorderedList" title="Bulleted list">•</button>
+                        <button class="icon" data-cmd="insertOrderedList" title="Numbered list">1.</button>
+                        <button class="icon" data-cmd="createLink" title="Insert link">🔗</button>
+                        <button class="icon" data-cmd="insertImage" title="Insert image">🖼️</button>
+                        <button class="icon" data-cmd="codeBlock" title="Code block">{ }</button>
+                        <div style="flex:1"></div>
+                        <button class="icon" id="clearFmt" title="Clear formatting">⌧</button>
+                        <button class="icon" id="undoBtn" title="Undo">↶</button>
+                        <button class="icon" id="redoBtn" title="Redo">↷</button>
+                    </div>
+                    <div class="editor-area">
+                        <div id="editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true">{{ message or '' }}</div>
+                    </div>
+                    <div class="statusbar">
+                        <div style="display:flex;gap:1rem;align-items:center">
+                            <small>Words: <span id="wordCount">0</span></small>
+                            <small>Chars: <span id="charCount">0</span></small>
+                            <small>Size: <span id="fileSize">0 KB</span></small>
+                        </div>
+                        <div style="display:flex;gap:1rem;align-items:center">
+                            <small>Line: <span id="cursorLine">1</span></small>
+                            <small>Col: <span id="cursorCol">1</span></small>
+                        </div>
+                    </div>
+                </section>
+                <aside class="file-actions-aside">
+                    <div>File Actions</div>
+                    <button id="loadBtn" class="btn secondary">Load</button>
+                    <button id="deleteBtn" class="btn secondary">Delete</button>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const $ = s => document.querySelector(s);
+        const api = { list: '/api/list_files', load: '/api/load_file', save: '/api/save_file', del: '/api/delete_file' };
+        const editor = $('#editor');
+        const filenameEl = $('#filename');
+        const fileList = $('#fileList');
+        const autosaveStatus = $('#autosaveStatus');
+
+        let autosave = false;
+        const AUTOSAVE_MS = 3000;
+        let autosaveTimer = null;
+        const undoStack = [];
+        const redoStack = [];
+        const MAX_HISTORY = 400;
+
+        function escapeHtml(s) {
+            return (s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+        }
+
+        async function listFiles() {
+            try {
+                const res = await fetch(api.list);
+                const json = await res.json();
+                fileList.innerHTML = '';
+                (json.files || []).forEach(f => {
+                    const row = document.createElement('div');
+                    row.className = 'file-item';
+                    row.innerHTML = `
+                        <div style="display:flex;flex-direction:column">
+                            <strong style="color:var(--text-primary)">${escapeHtml(f.name)}</strong>
+                            <span class="file-meta">${new Date(f.mtime * 1000).toLocaleString()}</span>
+                        </div>
+                        <div style="font-size:0.75rem;color:var(--text-muted)">${(f.size / 1024).toFixed(1)} KB</div>`;
+                    row.onclick = () => filenameEl.value = f.name;
+                    row.ondblclick = () => loadFile(f.name);
+                    fileList.appendChild(row);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function pushHistory() {
+            const v = editor.innerHTML;
+            if (undoStack.length && undoStack[undoStack.length - 1] === v) return;
+            undoStack.push(v);
+            if (undoStack.length > MAX_HISTORY) undoStack.shift();
+            redoStack.length = 0;
+            updateUndoRedo();
+        }
+
+        function updateUndoRedo() {
+            $('#undoBtn').style.opacity = undoStack.length ? '1' : '0.5';
+            $('#redoBtn').style.opacity = redoStack.length ? '1' : '0.5';
+        }
+
+        function applySnapshot(v) {
+            editor.innerHTML = v;
+            updateStats();
+        }
+
+        function debounced(fn, wait) {
+            let t;
+            return (...a) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...a), wait);
+            };
+        }
+
+        const debSave = debounced(() => {
+            if (autosave) autosaveSave();
+        }, 500);
+
+        async function autosaveSave() {
+            const name = filenameEl.value.trim();
+            if (!name) return;
+            try {
+                await fetch(api.save, {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ name, content: editor.innerHTML })
+                });
+                await listFiles();
+                autosaveStatus.textContent = 'Autosave: saved ' + new Date().toLocaleTimeString();
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        async function loadFile(name) {
+            const nm = name || filenameEl.value.trim();
+            if (!nm) return alert('Enter filename to load');
+            const res = await fetch(api.load + '?name=' + encodeURIComponent(nm));
+            if (!res.ok) return alert('File not found');
+            const data = await res.json();
+            editor.innerHTML = data.content || '';
+            undoStack.length = 0;
+            redoStack.length = 0;
+            pushHistory();
+            updateStats();
+        }
+
+        async function saveFile() {
+            const name = filenameEl.value.trim();
+            if (!name) return alert('Enter filename to save');
+            const res = await fetch(api.save, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ name, content: editor.innerHTML })
+            });
+            if (!res.ok) return alert('Save failed');
+            await listFiles();
+            alert('Saved: ' + name);
+        }
+
+        async function deleteFile() {
+            const name = filenameEl.value.trim();
+            if (!name) return alert('Enter filename to delete');
+            if (!confirm('Delete ' + name + '?')) return;
+            const res = await fetch(api.del, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if (!res.ok) return alert('Delete failed');
+            await listFiles();
+            editor.innerHTML = '';
+            alert('Deleted: ' + name);
+        }
+
+        function updateStats() {
+            const text = editor.textContent || '';
+            const words = text.trim().split(/\s+/).filter(Boolean).length;
+            $('#wordCount').textContent = words;
+            $('#charCount').textContent = text.length;
+            const bytes = new Blob([editor.innerHTML]).size;
+            $('#fileSize').textContent = (bytes / 1024).toFixed(2) + ' KB';
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) {
+                $('#cursorLine').textContent = 1;
+                $('#cursorCol').textContent = 1;
+                return;
+            }
+            const range = sel.getRangeAt(0);
+            const preRange = document.createRange();
+            preRange.selectNodeContents(editor);
+            preRange.setEnd(range.endContainer, range.endOffset);
+            const before = preRange.toString();
+            const lines = before.split('\n');
+            $('#cursorLine').textContent = lines.length;
+            $('#cursorCol').textContent = (lines[lines.length - 1] || '').length + 1;
+        }
+
+        function insertHtmlAtCursor(html) {
+            try {
+                if (document.queryCommandSupported('insertHTML')) {
+                    document.execCommand('insertHTML', false, html);
+                    return;
+                }
+            } catch (e) {}
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) {
+                editor.focus();
+                return;
+            }
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const el = document.createElement('div');
+            el.innerHTML = html;
+            const frag = document.createDocumentFragment();
+            let node;
+            while ((node = el.firstChild)) frag.appendChild(node);
+            range.insertNode(frag);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        function clearFormatting() {
+            if (confirm('Clear formatting? This will keep plain text only.')) {
+                const text = editor.textContent || '';
+                editor.innerHTML = `<p>${escapeHtml(text).replace(/\n/g, '</p><p>')}</p>`;
+                pushHistory();
+                updateStats();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            listFiles();
+            document.querySelectorAll('.toolbar .icon').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const cmd = btn.dataset.cmd;
+                    if (!cmd) return;
+                    editor.focus();
+                    if (cmd === 'bold') document.execCommand('bold', false, null);
+                    else if (cmd === 'italic') document.execCommand('italic', false, null);
+                    else if (cmd === 'underline') document.execCommand('underline', false, null);
+                    else if (cmd === 'strikeThrough') document.execCommand('strikeThrough', false, null);
+                    else if (cmd === 'insertUnorderedList') document.execCommand('insertUnorderedList', false, null);
+                    else if (cmd === 'insertOrderedList') document.execCommand('insertOrderedList', false, null);
+                    else if (cmd === 'createLink') {
+                        const url = prompt('Enter URL');
+                        if (url) document.execCommand('createLink', false, url);
+                    } else if (cmd === 'insertImage') {
+                        const url = prompt('Image URL');
+                        if (url) insertHtmlAtCursor(`<img src="${escapeHtml(url)}" alt="Image" style="max-width:100%;height:auto;">`);
+                    } else if (cmd === 'codeBlock') {
+                        insertHtmlAtCursor('<pre style="background:#2d2d2d;color:#e5e7eb;padding:1rem;border-radius:0.5rem;"><code></code></pre>');
+                    }
+                    pushHistory();
+                    updateStats();
+                });
+            });
+
+            $('#newBtn').addEventListener('click', () => {
+                filenameEl.value = '';
+                editor.innerHTML = '<p></p>';
+                undoStack.length = 0;
+                redoStack.length = 0;
+                pushHistory();
+                updateStats();
+            });
+            $('#saveBtn').addEventListener('click', saveFile);
+            $('#loadBtn').addEventListener('click', () => loadFile());
+            $('#deleteBtn').addEventListener('click', deleteFile);
+
+            $('#autosaveToggle').addEventListener('change', (e) => {
+                autosave = e.target.checked;
+                autosaveStatus.textContent = 'Autosave: ' + (autosave ? 'on' : 'off');
+                if (autosave) {
+                    if (autosaveTimer) clearInterval(autosaveTimer);
+                    autosaveTimer = setInterval(autosaveSave, AUTOSAVE_MS);
+                } else {
+                    if (autosaveTimer) {
+                        clearInterval(autosaveTimer);
+                        autosaveTimer = null;
+                    }
+                }
+            });
+
+            $('#themeToggle').addEventListener('change', (e) => {
+                document.body.setAttribute('data-theme', e.target.checked ? 'light' : 'dark');
+            });
+
+            $('#undoBtn').addEventListener('click', () => {
+                if (!undoStack.length) return;
+                const cur = editor.innerHTML;
+                const prev = undoStack.pop();
+                redoStack.push(cur);
+                applySnapshot(prev);
+            });
+
+            $('#redoBtn').addEventListener('click', () => {
+                if (!redoStack.length) return;
+                const next = redoStack.pop();
+                undoStack.push(editor.innerHTML);
+                applySnapshot(next);
+            });
+
+            $('#clearFmt').addEventListener('click', clearFormatting);
+
+            fileList.addEventListener('dblclick', () => loadFile());
+
+            editor.addEventListener('input', () => {
+                pushHistory();
+                updateStats();
+                debSave();
+            });
+
+            editor.addEventListener('keyup', updateStats);
+            editor.addEventListener('click', updateStats);
+
+            document.addEventListener('keydown', (e) => {
+                const mod = navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey;
+                if (mod && e.key.toLowerCase() === 's') {
+                    e.preventDefault();
+                    saveFile();
+                }
+                if (mod && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    $('#undoBtn').click();
+                }
+                if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+                    e.preventDefault();
+                    $('#redoBtn').click();
+                }
+            });
+
+            editor.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                document.execCommand('insertText', false, text);
+            });
+
+            updateStats();
+            pushHistory();
+        });
+
+        filenameEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                loadFile();
+            }
+        });
+
+        window._mt_save = saveFile;
+        window._mt_load = loadFile;
+        window._mt_delete = deleteFile;
+    </script>
+</body>
+
+</html>
