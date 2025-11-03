@@ -8,4 +8,5 @@ dist/
 build/
 *.egg-info/
 .vercel
-saved_files/
+saved_files/*
+!saved_files/.gitkeep
