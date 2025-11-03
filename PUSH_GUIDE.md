@@ -70,17 +70,12 @@ git pull --rebase origin master   # while on master
 - Use a GitHub Personal Access Token (PAT) instead of password for HTTPS pushes.
 - Or set up SSH keys and change the remote to SSH: `git remote set-url origin git@github.com:NYN-05/Text_editor.git`.
 
-## Common workflows
-
-- Small edits: edit -> git add -> git commit -> git push
-- New feature: git checkout -b feature/x -> work -> add/commit -> push -> open PR on GitHub
-
-## Verifying the push
-
-After pushing, you can list remote branches:
-
-```powershell
-git ls-remote --heads origin
+8. Final steps to be conducted 
+```git add .
+git commit -m "Short: describe what you changed"
+git push origin master
+git checkout -b feature/short-description
+git push --set-upstream origin feature/short-description
 ```
 
 Or open the repo in a browser: https://github.com/NYN-05/Text_editor
