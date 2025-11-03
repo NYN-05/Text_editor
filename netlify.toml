@@ -1,0 +1,19 @@
+[build]
+  # Netlify will publish the static site from the `templates` folder
+  publish = "templates"
+  # No build command for this simple static site; set one if you add a build step later
+  command = ""
+
+[dev]
+  # Local dev server functions folder (use Netlify CLI `netlify dev` to test functions)
+  functions = "netlify/functions"
+
+# Note:
+# - This configuration publishes the `templates/` directory which contains the site's
+#   `index.html`. If your site requires a build step (for example a bundler, SSG, or
+#   a framework) set `command` to the build command and change `publish` to the
+#   directory the build produces (for example `dist/` or `build/`).
+# - Netlify's native Functions runtime supports JavaScript/Go out of the box. To run
+#   Python-based serverless functions on Netlify you must use a build plugin or
+#   container-based approach. If you rely on `api/index.py` (Vercel-style), consider
+#   moving server code to a separate server or converting to a Netlify Function.
