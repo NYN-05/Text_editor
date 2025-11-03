@@ -157,7 +157,7 @@ def delete_file():
 @app.route('/')
 def index():
     # Render a simple Jinja template
-    return render_template('index.html', title='Modern Text Editor', message='Hello from Flask on Vercel!')
+    return render_template('index.html', title='Modern Text Editor', message='Hello from Jhashank!')
 
 
 if __name__ == '__main__':
